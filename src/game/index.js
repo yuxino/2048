@@ -38,7 +38,7 @@ class Game {
       this.win = false
       this.keep = false
       this.currentScore = 0
-      this.bestScore = historyState.bestScore || 0
+      this.bestScore = historyState ? historyState.bestScore : 0
       this.grid = new Grid(this.size)
       this.startRandomTiles()
       this.saveGame()
