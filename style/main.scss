@@ -1,0 +1,507 @@
+@import './helpers';
+
+$body-background: #faf8ef;
+$body-color: #776e65;
+
+$app-width: 500px;
+$grid-spacing: 15px;
+$grid-row-cells: 4;
+$grid-cell-background: rgba(238, 228, 218, 0.35);
+$tile-size: ($app-width - $grid-spacing * ($grid-row-cells + 1)) / $grid-row-cells;
+
+$bright-text-color: #f9f6f2;
+$tile-border-radius: 3px;
+$tile-color: #eee4da;
+$tile-gold-color: #edc22e;
+$tile-gold-glow-color: lighten($tile-gold-color, 15%);
+
+$game-container-margin: 40px;
+$game-container-border-radius: 6px;
+$game-container-background: #bbada0;
+$transition-speed: 100ms;
+
+$gg-background: rgba(238, 228, 218, 0.5);
+$win-background: rgba(237, 194, 46, 0.5);
+
+$footer-margin: 40px;
+
+$mobile-threshold: $app-width + 20px;
+
+$btn-background: #8f7a66;
+$btn-color: #f9f6f2;
+
+html,body {
+  margin: 0;
+  padding: 0;
+  background: $body-background;
+  color: $body-color;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 18px;
+}
+
+#app {
+  width: $app-width;
+  margin: 50px auto;
+}
+
+.heading {
+  @include clearfix();
+  margin-bottom: 15px;
+}
+
+h1.title {
+  font-size: 80px;
+  font-weight: bold;
+  margin: 0;
+  display: block;
+  float: left;
+}
+
+.scores-container {
+  float: right;
+  text-align: right;
+  position: relative;
+}
+
+.score-container, .best-container {
+  position: relative;
+  display: inline-block;
+  background: #bbada0;
+  padding: 15px 25px;
+  font-size: 25px;
+  height: 25px;
+  line-height: 47px;
+  font-weight: bold;
+  border-radius: 3px;
+  color: white;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.score-container:after {
+  content: "Score";
+}
+
+.best-container:after {
+  content: "Best";
+}
+
+.score-container:after, .best-container:after {
+  position: absolute;
+  width: 100%;
+  top: 10px;
+  left: 0;
+  text-transform: uppercase;
+  font-size: 13px;
+  line-height: 13px;
+  text-align: center;
+  color: #eee4da;
+}
+
+.score-add {
+  position: absolute;
+  color: rgba(119, 110, 101, 0.9);
+  font-size: 25px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  opacity: 0;
+  transition: .5s ease-in-out;
+}
+
+.restart-container {
+  line-height: 2.45;
+  @include clearfix();
+  .tip {
+    width: 350px;
+    float: left;  
+  }
+}
+
+.btn {
+  background: $btn-background;
+  border-radius: 3px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: $btn-color;
+  height: 40px;
+  line-height: 42px;
+  text-align: center;
+  border: 0;
+  cursor: pointer;
+  outline: none;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.restart-button {
+  float: right;
+}
+
+.game-container{
+  width: $app-width;
+  height: $app-width;
+  padding: $grid-spacing;
+  margin-top: $game-container-margin;
+  box-sizing: border-box;
+  border-radius: $game-container-border-radius;
+  background: $game-container-background;
+  position: relative;
+}
+
+// Grid
+.grid-container {
+  position: absolute;
+  z-index: 1;
+}
+
+.grid-row {
+  margin-bottom: $grid-spacing;
+  @include clearfix();
+  &:last-child {
+    margin-bottom: 0;
+  }
+} 
+
+.grid-cell {
+  width: $tile-size;
+  height: $tile-size;
+  border-radius: $tile-border-radius;
+  float: left;
+  margin-right: $grid-spacing;
+  background: $grid-cell-background;
+  &:last-child{
+    margin-right: 0;
+  }
+}
+
+// Tile
+.tile-container {
+  position: absolute;
+  z-index: 2;
+}
+
+.tile {
+  &, .tile-inner {
+    width: ceil($tile-size);
+    height: ceil($tile-size);
+    line-height: ceil($tile-size);
+  }
+
+  // Position class
+  @for $x from 1 through $grid-row-cells {
+    @for $y from 1 through $grid-row-cells {
+      // 这里再算动画
+      &.tile-position-#{$x}-#{$y} {
+        $xPos: floor(($tile-size + $grid-spacing) * ($x - 1));
+        $yPos: floor(($tile-size + $grid-spacing) * ($y - 1));
+        // 添加过度
+        transform: translate($xPos, $yPos);
+      }
+    }
+  }
+}
+
+.tile {
+  position: absolute; // Makes transforms relative to the top-left corner
+  .tile-inner {
+    border-radius: $tile-border-radius;
+    background: $tile-color;
+    text-align: center;
+    font-weight: bold;
+    z-index: 10;
+    font-size: 55px;
+  }
+
+  // Movement transition
+  // 移动的时候的过度动画
+  transition: transform $transition-speed ease-in-out;
+
+  $base: 2;
+  $exponent: 1;
+  $limit: 11;
+
+  // Colors for all 11 states, false = no special color
+  $special-colors: false false, // 2
+                   false false, // 4
+                   #f78e48 true, // 8
+                   #fc5e2e true, // 16
+                   #ff3333 true, // 32
+                   #ff0000 true, // 64
+                   false true, // 128
+                   false true, // 256
+                   false true, // 512
+                   false true, // 1024
+                   false true; // 2048
+
+  // Build tile colors
+  // Emmmm 就是构建11种牙呢
+  @while $exponent <= $limit {
+    // 2 的 x 次方
+    $power: pow($base, $exponent);
+    // 计算字体大小
+    // .tile-2
+    // .tile-4
+    // .tile-8
+    &.tile-#{$power} .tile-inner {
+      // 計算基礎的背景顔色
+      $gold-percent: ($exponent - 1) / ($limit - 1) * 100;
+      // 混合背景
+      $mixed-background: mix($tile-gold-color, $tile-color, $gold-percent);
+      // 选取对应位置的颜色
+      $nth-color: nth($special-colors, $exponent);
+      // 指定背景
+      $special-background: nth($nth-color, 1);
+      // 
+      $bright-color: nth($nth-color, 2);
+
+      // 指定背景颜色
+      @if $special-background {
+        // Emmmmm 还要再混合一次
+        $mixed-background: mix($special-background, $mixed-background, 55%);
+      }
+
+      // 如果有指定颜色
+      // 否则是默认的颜色
+      @if $bright-color {
+        color: $bright-text-color;
+      }
+
+      // 设置背景颜色
+      background: $mixed-background;
+
+      // glow ????
+      $glow-opacity: max($exponent - 4, 0) / ($limit - 4);
+
+      // 如果没有指定颜色
+      @if not $special-background {
+        // 设置阴影 
+        box-shadow: 0 0 30px 10px rgba($tile-gold-glow-color, $glow-opacity / 1.8),
+                    inset 0 0 0 1px rgba(white, $glow-opacity / 3);
+      }
+      // 100 到 1000以内的字的大小
+      @if $power >= 100 and $power < 1000 {
+        font-size: 45px;
+        @include smaller($mobile-threshold) {
+          font-size: 25px;
+        }
+      }
+      // 大于 1000 的字的大小
+      @else if $power >= 1000 {
+        font-size: 35px;
+        @include smaller($mobile-threshold) {
+          font-size: 15px;
+        }
+      }
+    }
+
+    $exponent: $exponent + 1;
+  }
+
+  // 超越 2048的tile
+  &.tile-super .tile-inner {
+    color: $bright-text-color;
+    background: mix(#333, $tile-gold-color, 95%);
+    font-size: 30px;
+  }
+}
+
+.tile-new .tile-inner {
+  animation: appear 200ms ease $transition-speed;
+  animation-fill-mode: backwards;
+}
+
+.tile-merged .tile-inner {
+  z-index: 20;
+  animation: pop 200ms ease-in-out $transition-speed;
+  animation-fill-mode: backwards;
+}
+
+// Message
+.message-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  z-index: 100;
+  animation: fade-in 800ms ease-in-out both;
+
+  &  p {
+    font-size: 60px;
+    font-weight: bold;
+    height: 60px;
+    line-height: 60px;
+    margin-top: 180px;
+    margin-bottom: 25px;
+  }
+}
+
+.gg {
+  background: $gg-background;
+}
+
+.win {
+  background: $win-background;
+}
+
+// Footer
+footer {
+  margin-top: $footer-margin;
+
+  hr {
+    border: none;
+    border-bottom: 1px solid #d8d4d0;
+    margin-top: 20px;
+    margin-bottom: 30px;
+  }
+
+  a {
+    color: #776e65;
+  }
+}
+
+// 动画
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0)
+  }
+
+  50% {
+    transform: scale(1.2)
+  }
+
+  100% {
+    transform: scale(1)
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0; 
+  }
+
+  100% {
+    opacity: 1; 
+  }
+}
+
+// 手机端处理
+@include smaller($mobile-threshold) {
+  $app-width: 280px;
+  $grid-spacing: 10px;
+  $tile-size: ($app-width - $grid-spacing * ($grid-row-cells + 1)) / $grid-row-cells;
+  
+  html,body {
+    margin: 20px 0;
+    font-size: 14px;
+  }
+
+  #app {
+    width: $app-width;
+    margin: auto;
+  }
+
+  h1.title {
+    font-size: 25px;
+    margin-top: 34px;
+  }
+
+  .score-container, .best-container {
+    font-size: 16px;
+  }
+
+  .restart-container {
+    .tip {
+      width: 160px;
+      line-height: 20px;
+    }
+  }
+
+  .game-container{
+    width: $app-width;
+    height: $app-width;
+    padding: $grid-spacing;
+    margin-top: $game-container-margin;
+    border-radius: $game-container-border-radius;
+    background: $game-container-background;
+  }
+
+  .grid-row {
+    margin-bottom: $grid-spacing;
+  } 
+
+  .grid-cell {
+    width: $tile-size;
+    height: $tile-size;
+    border-radius: $tile-border-radius;
+    margin-right: $grid-spacing;
+    background: $grid-cell-background;
+  }
+
+  // Tile
+  .tile {
+    &, .tile-inner {
+      border-radius: $tile-border-radius;
+      background: $tile-color;
+      font-size: 35px;
+      width: ceil($tile-size);
+      height: ceil($tile-size);
+      line-height: ceil($tile-size);
+    }
+    // Position class
+    @for $x from 1 through $grid-row-cells {
+      @for $y from 1 through $grid-row-cells {
+        // 这里再算动画
+        &.tile-position-#{$x}-#{$y} {
+          $xPos: floor(($tile-size + $grid-spacing) * ($x - 1));
+          $yPos: floor(($tile-size + $grid-spacing) * ($y - 1));
+          // 添加过度
+          transform: translate($xPos, $yPos);
+        }
+      }
+    }
+  }
+
+  .message-container{
+    p {
+      margin-top: 60px;
+      font-size: 40px;
+    }
+  }
+
+  footer{
+    margin-top: 20px;
+    hr {  
+      margin-top: 15px;
+      margin-bottom: 15px;
+    }
+  }
+}
+
+// 动画
+.add {
+  animation: add;
+  animation-duration: 600ms;
+}
+
+@keyframes add {
+  to {
+    opacity: 1;
+    top: -35px;
+  }
+}
