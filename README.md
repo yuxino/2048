@@ -1,40 +1,29 @@
 # 2048
 
-> 2048 in vue.
+一个基于 Vue 2 实现的 2048 网页游戏。
 
-## Preview
+项目将棋盘状态、移动合并逻辑和输入处理拆分为独立模块，并使用 Vue 负责界面渲染与状态展示。
+
+## 预览
+
 ![2048](./media/preview.png)
 
-## Build Setup
+## 技术栈
 
-``` bash
-# install dependencies
+- Vue 2
+- JavaScript
+- Sass
+- Webpack
+
+## 本地运行
+
+```bash
 npm install
-
-# serve with hot reload at localhost:8080
 npm run dev
+```
 
-# lint the Typescript
-npm run lint
+生产构建：
 
-# run the tests
-npm test
-
-# run the tests on changes
-npm run test:watch
-
-# run the test suite and generate a coverage report
-npm run coverage
-
-# run the tests on Teamcity
-npm run ci:teamcity
-
-# run the tests on Jenkins
-npm run ci:jenkins
-
-# build for production with minification
+```bash
 npm run build
-
-# clean the production build
-npm run clean
 ```
