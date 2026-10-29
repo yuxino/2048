@@ -43,7 +43,7 @@
     <footer>
       <p><b>HOW TO PLAY</b>: Use your arrow keys to move the tiles. When two tiles with the same number touch, they merge into one!</p>
       <hr />
-      <p>This Game was power by vue.js <b> Created by </b><a href="https://github.com/Nbsaw">Nbsaw</a>.</p>
+      <p>This Game was power by vue.js <b> Created by </b><a href="https://github.com/yuxino">yuxino</a>.</p>
     </footer>
   </div>
 </template>
